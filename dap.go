@@ -344,8 +344,9 @@ func (ds *JsonnetDebugSession) onInitializeRequest(request *dap.InitializeReques
 }
 
 type launchRequest struct {
-	Program string   `json:"program"`
-	JPaths  []string `json:"jpaths"`
+	Program string            `json:"program"`
+	JPaths  []string          `json:"jpaths"`
+	ExtVars map[string]string `json:"extvars"`
 }
 
 func (ds *JsonnetDebugSession) onLaunchRequest(request *dap.LaunchRequest) {
@@ -362,6 +363,9 @@ func (ds *JsonnetDebugSession) onLaunchRequest(request *dap.LaunchRequest) {
 		return
 	}
 	ds.debugger.Launch(lr.Program, string(raw), lr.JPaths)
+	for key, val := range lr.ExtVars {
+		ds.debugger.GetVM().ExtVar(key, val)
+	}
 	slog.Debug("Starting debugging", "breakpoints", ds.debugger.ActiveBreakpoints(), "file", lr.Program)
 	response := &dap.LaunchResponse{}
 	response.Response = *newResponse(request.Seq, request.Command)
