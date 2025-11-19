@@ -138,7 +138,10 @@ func (ds *JsonnetDebugSession) dispatchEvents() {
 			case jsonnet.StopReasonException:
 				e = &dap.StoppedEvent{
 					Event: *newEvent("stopped"),
-					Body:  dap.StoppedEventBody{Reason: "exception", ThreadId: 1, AllThreadsStopped: true, Text: ev.Error.Error()},
+					Body: dap.StoppedEventBody{
+						Reason: "exception", ThreadId: 1,
+						AllThreadsStopped: true, Text: ev.Error.Error(),
+					},
 				}
 			}
 		case *jsonnet.DebugEventExit:
@@ -298,7 +301,6 @@ type JsonnetDebugSession struct {
 // and use their results to populate each response.
 
 func (ds *JsonnetDebugSession) onInitializeRequest(request *dap.InitializeRequest) {
-
 	response := &dap.InitializeResponse{}
 	response.Response = *newResponse(request.Seq, request.Command)
 	response.Body.SupportsConfigurationDoneRequest = false
@@ -347,6 +349,7 @@ type launchRequest struct {
 	Program string            `json:"program"`
 	JPaths  []string          `json:"jpaths"`
 	ExtVars map[string]string `json:"extvars"`
+	ExtCode map[string]string `json:"extcode"`
 }
 
 func (ds *JsonnetDebugSession) onLaunchRequest(request *dap.LaunchRequest) {
@@ -366,6 +369,9 @@ func (ds *JsonnetDebugSession) onLaunchRequest(request *dap.LaunchRequest) {
 	for key, val := range lr.ExtVars {
 		ds.debugger.GetVM().ExtVar(key, val)
 	}
+	for key, val := range lr.ExtCode {
+		ds.debugger.GetVM().ExtCode(key, val)
+	}
 	slog.Debug("Starting debugging", "breakpoints", ds.debugger.ActiveBreakpoints(), "file", lr.Program)
 	response := &dap.LaunchResponse{}
 	response.Response = *newResponse(request.Seq, request.Command)
@@ -383,7 +389,8 @@ func (ds *JsonnetDebugSession) onDisconnectRequest(request *dap.DisconnectReques
 }
 
 func (ds *JsonnetDebugSession) onTerminateRequest(request *dap.TerminateRequest) {
-	ds.send(newErrorResponse(request.Seq, request.Command, "TerminateRequest is not yet supported"))
+	ds.send(newErrorResponse(request.Seq, request.Command,
+		"TerminateRequest is not yet supported"))
 }
 
 func (ds *JsonnetDebugSession) onRestartRequest(request *dap.RestartRequest) {
@@ -408,7 +415,8 @@ func (ds *JsonnetDebugSession) onSetBreakpointsRequest(request *dap.SetBreakpoin
 }
 
 func (ds *JsonnetDebugSession) onSetFunctionBreakpointsRequest(request *dap.SetFunctionBreakpointsRequest) {
-	ds.send(newErrorResponse(request.Seq, request.Command, "SetFunctionBreakpointsRequest is not yet supported"))
+	ds.send(newErrorResponse(request.Seq, request.Command,
+		"SetFunctionBreakpointsRequest is not yet supported"))
 }
 
 func (ds *JsonnetDebugSession) onSetExceptionBreakpointsRequest(request *dap.SetExceptionBreakpointsRequest) {
@@ -418,7 +426,8 @@ func (ds *JsonnetDebugSession) onSetExceptionBreakpointsRequest(request *dap.Set
 }
 
 func (ds *JsonnetDebugSession) onConfigurationDoneRequest(request *dap.ConfigurationDoneRequest) {
-	ds.send(newErrorResponse(request.Seq, request.Command, "ConfigurationDoneRequest is not yet supported"))
+	ds.send(newErrorResponse(request.Seq, request.Command,
+		"ConfigurationDoneRequest is not yet supported"))
 }
 
 func (ds *JsonnetDebugSession) onContinueRequest(request *dap.ContinueRequest) {
@@ -447,15 +456,18 @@ func (ds *JsonnetDebugSession) onStepOutRequest(request *dap.StepOutRequest) {
 }
 
 func (ds *JsonnetDebugSession) onStepBackRequest(request *dap.StepBackRequest) {
-	ds.send(newErrorResponse(request.Seq, request.Command, "StepBackRequest is not yet supported"))
+	ds.send(newErrorResponse(request.Seq, request.Command,
+		"StepBackRequest is not yet supported"))
 }
 
 func (ds *JsonnetDebugSession) onReverseContinueRequest(request *dap.ReverseContinueRequest) {
-	ds.send(newErrorResponse(request.Seq, request.Command, "ReverseContinueRequest is not yet supported"))
+	ds.send(newErrorResponse(request.Seq, request.Command,
+		"ReverseContinueRequest is not yet supported"))
 }
 
 func (ds *JsonnetDebugSession) onRestartFrameRequest(request *dap.RestartFrameRequest) {
-	ds.send(newErrorResponse(request.Seq, request.Command, "RestartFrameRequest is not yet supported"))
+	ds.send(newErrorResponse(request.Seq, request.Command,
+		"RestartFrameRequest is not yet supported"))
 }
 
 func (ds *JsonnetDebugSession) onGotoRequest(request *dap.GotoRequest) {
@@ -547,11 +559,13 @@ func (ds *JsonnetDebugSession) onVariablesRequest(request *dap.VariablesRequest)
 }
 
 func (ds *JsonnetDebugSession) onSetVariableRequest(request *dap.SetVariableRequest) {
-	ds.send(newErrorResponse(request.Seq, request.Command, "setVariableRequest is not yet supported"))
+	ds.send(newErrorResponse(request.Seq, request.Command,
+		"setVariableRequest is not yet supported"))
 }
 
 func (ds *JsonnetDebugSession) onSetExpressionRequest(request *dap.SetExpressionRequest) {
-	ds.send(newErrorResponse(request.Seq, request.Command, "SetExpressionRequest is not yet supported"))
+	ds.send(newErrorResponse(request.Seq, request.Command,
+		"SetExpressionRequest is not yet supported"))
 }
 
 func (ds *JsonnetDebugSession) onSourceRequest(request *dap.SourceRequest) {
@@ -564,17 +578,18 @@ func (ds *JsonnetDebugSession) onThreadsRequest(request *dap.ThreadsRequest) {
 	response.Response = *newResponse(request.Seq, request.Command)
 	response.Body = dap.ThreadsResponseBody{Threads: []dap.Thread{{Id: 1, Name: "main"}}}
 	ds.send(response)
-
 }
 
 func (ds *JsonnetDebugSession) onTerminateThreadsRequest(request *dap.TerminateThreadsRequest) {
-	ds.send(newErrorResponse(request.Seq, request.Command, "TerminateRequest is not yet supported"))
+	ds.send(newErrorResponse(request.Seq, request.Command,
+		"TerminateRequest is not yet supported"))
 }
 
 func (ds *JsonnetDebugSession) onEvaluateRequest(request *dap.EvaluateRequest) {
 	v, err := ds.debugger.LookupValue(request.Arguments.Expression)
 	if err != nil {
-		ds.send(newErrorResponse(request.Seq, request.Command, fmt.Sprintf("Failed to look up variable: %s", err.Error())))
+		ds.send(newErrorResponse(request.Seq, request.Command,
+			fmt.Sprintf("Failed to look up variable: %s", err.Error())))
 		return
 	}
 	response := &dap.EvaluateResponse{}
@@ -587,19 +602,23 @@ func (ds *JsonnetDebugSession) onEvaluateRequest(request *dap.EvaluateRequest) {
 }
 
 func (ds *JsonnetDebugSession) onStepInTargetsRequest(request *dap.StepInTargetsRequest) {
-	ds.send(newErrorResponse(request.Seq, request.Command, "StepInTargetRequest is not yet supported"))
+	ds.send(newErrorResponse(request.Seq, request.Command,
+		"StepInTargetRequest is not yet supported"))
 }
 
 func (ds *JsonnetDebugSession) onGotoTargetsRequest(request *dap.GotoTargetsRequest) {
-	ds.send(newErrorResponse(request.Seq, request.Command, "GotoTargetRequest is not yet supported"))
+	ds.send(newErrorResponse(request.Seq, request.Command,
+		"GotoTargetRequest is not yet supported"))
 }
 
 func (ds *JsonnetDebugSession) onCompletionsRequest(request *dap.CompletionsRequest) {
-	ds.send(newErrorResponse(request.Seq, request.Command, "CompletionRequest is not yet supported"))
+	ds.send(newErrorResponse(request.Seq, request.Command,
+		"CompletionRequest is not yet supported"))
 }
 
 func (ds *JsonnetDebugSession) onExceptionInfoRequest(request *dap.ExceptionInfoRequest) {
-	ds.send(newErrorResponse(request.Seq, request.Command, "ExceptionRequest is not yet supported"))
+	ds.send(newErrorResponse(request.Seq, request.Command,
+		"ExceptionRequest is not yet supported"))
 }
 
 func (ds *JsonnetDebugSession) onLoadedSourcesRequest(request *dap.LoadedSourcesRequest) {
@@ -607,19 +626,23 @@ func (ds *JsonnetDebugSession) onLoadedSourcesRequest(request *dap.LoadedSources
 }
 
 func (ds *JsonnetDebugSession) onDataBreakpointInfoRequest(request *dap.DataBreakpointInfoRequest) {
-	ds.send(newErrorResponse(request.Seq, request.Command, "DataBreakpointInfoRequest is not yet supported"))
+	ds.send(newErrorResponse(request.Seq, request.Command,
+		"DataBreakpointInfoRequest is not yet supported"))
 }
 
 func (ds *JsonnetDebugSession) onSetDataBreakpointsRequest(request *dap.SetDataBreakpointsRequest) {
-	ds.send(newErrorResponse(request.Seq, request.Command, "SetDataBreakpointsRequest is not yet supported"))
+	ds.send(newErrorResponse(request.Seq, request.Command,
+		"SetDataBreakpointsRequest is not yet supported"))
 }
 
 func (ds *JsonnetDebugSession) onReadMemoryRequest(request *dap.ReadMemoryRequest) {
-	ds.send(newErrorResponse(request.Seq, request.Command, "ReadMemoryRequest is not yet supported"))
+	ds.send(newErrorResponse(request.Seq, request.Command,
+		"ReadMemoryRequest is not yet supported"))
 }
 
 func (ds *JsonnetDebugSession) onDisassembleRequest(request *dap.DisassembleRequest) {
-	ds.send(newErrorResponse(request.Seq, request.Command, "DisassembleRequest is not yet supported"))
+	ds.send(newErrorResponse(request.Seq, request.Command,
+		"DisassembleRequest is not yet supported"))
 }
 
 func (ds *JsonnetDebugSession) onCancelRequest(request *dap.CancelRequest) {
@@ -627,7 +650,8 @@ func (ds *JsonnetDebugSession) onCancelRequest(request *dap.CancelRequest) {
 }
 
 func (ds *JsonnetDebugSession) onBreakpointLocationsRequest(request *dap.BreakpointLocationsRequest) {
-	ds.send(newErrorResponse(request.Seq, request.Command, "BreakpointLocationsRequest is not yet supported"))
+	ds.send(newErrorResponse(request.Seq, request.Command,
+		"BreakpointLocationsRequest is not yet supported"))
 }
 
 func newEvent(event string) *dap.Event {
