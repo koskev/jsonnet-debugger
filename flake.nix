@@ -1,0 +1,42 @@
+{
+  inputs = {
+    flake-utils.url = "github:numtide/flake-utils";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+  };
+
+  outputs =
+    {
+      self,
+      flake-utils,
+      nixpkgs,
+
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = (import nixpkgs) {
+          inherit system;
+        };
+
+      in
+      {
+        defaultPackage = pkgs.buildGoModule {
+          pname = "jsonnet-debugger";
+          version = "0.0.1";
+
+          src = ./.;
+          vendorHash = "sha256-3nSNkLydh97zhMliRZ2ZL9K9KBeBv384dVlqs52zUxg=";
+
+        };
+        devShell = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            go
+            gopls
+
+            go-jsonnet
+          ];
+        };
+      }
+
+    );
+}
