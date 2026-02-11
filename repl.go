@@ -26,7 +26,7 @@ type ReplDebugger struct {
 func MakeReplDebugger(filename, snippet string, jpaths []string) *ReplDebugger {
 	line := liner.NewLiner()
 	line.SetCtrlCAborts(true)
-	histFile := filepath.Join(os.TempDir(), ".jsonnice-history")
+	histFile := filepath.Join(os.TempDir(), ".jsonnet-debugger-history")
 	if f, err := os.Open(histFile); err == nil {
 		line.ReadHistory(f)
 		f.Close()
@@ -68,7 +68,8 @@ EVENTLOOP:
 			case jsonnet.StopReasonStep:
 				r.printCurrentContext(e.Current)
 			case jsonnet.StopReasonException:
-				fmt.Printf("%s: %s\n", color.Red.Render("Encountered error during evaluation"), e.ErrorFmt())
+				fmt.Printf("%s: %s\n", color.Red.Render(
+					"Encountered error during evaluation"), e.ErrorFmt())
 				r.printCurrentContext(e.Current)
 			}
 			r.repl(e.Current, e.LastEvaluation, e.Error)
@@ -137,7 +138,8 @@ func (r *ReplDebugger) repl(current ast.Node, lastVal *string, jerr error) {
 			}
 			for _, l := range loc {
 				if strings.HasPrefix(l.String(), parts[1]) {
-					c = append(c, fmt.Sprintf("%s %s:%s", parts[0], l.File.DiagnosticFileName, l.Begin.String()))
+					c = append(c, fmt.Sprintf("%s %s:%s", parts[0],
+						l.File.DiagnosticFileName, l.Begin.String()))
 				}
 			}
 		}
@@ -218,7 +220,8 @@ func (r *ReplDebugger) repl(current ast.Node, lastVal *string, jerr error) {
 			fmt.Printf("- %s", frame.Name)
 			if frame.Loc.File != nil {
 				fmt.Print("\t\t\t")
-				fmt.Print(color.Gray.Render(fmt.Sprintf("%s:%d:%d", frame.Loc.File.DiagnosticFileName, frame.Loc.Begin.Line, frame.Loc.Begin.Column)))
+				fmt.Print(color.Gray.Render(fmt.Sprintf("%s:%d:%d",
+					frame.Loc.File.DiagnosticFileName, frame.Loc.Begin.Line, frame.Loc.Begin.Column)))
 			}
 			fmt.Print("\n")
 		}
