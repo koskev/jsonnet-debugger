@@ -10,10 +10,8 @@ import (
 	"github.com/lmittmann/tint"
 )
 
-var (
-	// Set with `-ldflags="-X 'main.version=<version>'"`
-	version = "dev"
-)
+// Set with `-ldflags="-X 'main.version=<version>'"`
+var version = "dev"
 
 func printVersion(o io.Writer) {
 	fmt.Fprintf(o, "jsonnet-debugger version %s\n", version)
@@ -44,6 +42,7 @@ type config struct {
 	inputFile      string
 	filenameIsCode bool
 	dap            bool
+	port           string
 	jpath          []string
 	logLevel       slog.Level
 	stdin          bool
@@ -97,6 +96,7 @@ func processArgs(givenArgs []string, config *config) (processArgsStatus, error) 
 
 	remainingArgs := make([]string, 0, len(args))
 	i := 0
+	config.port = "54321"
 
 	for ; i < len(args); i++ {
 		arg := args[i]
@@ -124,6 +124,9 @@ func processArgs(givenArgs []string, config *config) (processArgsStatus, error) 
 			config.jpath = append(config.jpath, dir)
 		} else if arg == "-d" || arg == "--dap" {
 			config.dap = true
+		} else if arg == "-p" || arg == "--port" {
+			arg := nextArg(&i, args)
+			config.port = arg
 		} else if arg == "-l" || arg == "--log-level" {
 			level := nextArg(&i, args)
 			if len(level) == 0 {
@@ -140,7 +143,8 @@ func processArgs(givenArgs []string, config *config) (processArgsStatus, error) 
 			case "error":
 				slvl = slog.LevelError
 			default:
-				return processArgsStatusFailure, fmt.Errorf("invalid log level %s. Allowed: debug,info,warn,error", level)
+				return processArgsStatusFailure, fmt.Errorf(
+					"invalid log level %s. Allowed: debug,info,warn,error", level)
 			}
 			config.logLevel = slvl
 		} else if len(arg) > 1 && arg[0] == '-' {
@@ -248,7 +252,7 @@ func main() {
 		if config.stdin {
 			err = dapStdin()
 		} else {
-			err = dapServer("54321")
+			err = dapServer(config.port)
 		}
 		if err != nil {
 			slog.Error("dap server terminated", "err", err)
