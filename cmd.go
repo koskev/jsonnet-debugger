@@ -20,7 +20,7 @@ func printVersion(o io.Writer) {
 func usage(o io.Writer) {
 	printVersion(o)
 	fmt.Fprintln(o)
-	fmt.Fprintln(o, "jsonnice {<option>} { <filename> }")
+	fmt.Fprintln(o, "jsonnet-debugger {<option>} { <filename> }")
 	fmt.Fprintln(o)
 	fmt.Fprintln(o, "Available options:")
 	fmt.Fprintln(o, "  -h / --help                This message")
@@ -35,7 +35,7 @@ func usage(o io.Writer) {
 	fmt.Fprintln(o, "  Multichar options are expanded e.g. -abc becomes -a -b -c.")
 	fmt.Fprintln(o, "  The -- option suppresses option processing for subsequent arguments.")
 	fmt.Fprintln(o, "  Note that since filenames and jsonnet programs can begin with -, it is")
-	fmt.Fprintln(o, "  advised to use -- if the argument is unknown, e.g. jsonnice -- \"$FILENAME\".")
+	fmt.Fprintln(o, "  advised to use -- if the argument is unknown, e.g. jsonnet-debugger -- \"$FILENAME\".")
 }
 
 type config struct {
