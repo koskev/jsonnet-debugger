@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"path"
+	"time"
 
 	"github.com/lmittmann/tint"
 )
@@ -29,6 +30,8 @@ func usage(o io.Writer) {
 	fmt.Fprintln(o, "  -d / --dap                 Start a debug-adapter-protocol server")
 	fmt.Fprintln(o, "  -s / --stdin               Start a debug-adapter-protocol session using stdion/stdout for communication")
 	fmt.Fprintln(o, "  -l / --log-level           Set the log level. Allowed values: debug,info,warn,error")
+	fmt.Fprintln(o, "  --no-timestamp             Replaces the timestamp in logs with a space (required for intellij)")
+	fmt.Fprintln(o, "  -p / --port                Sets the port to listen to in dap mode")
 	fmt.Fprintln(o, "  --version                  Print version")
 	fmt.Fprintln(o)
 	fmt.Fprintln(o, "In all cases:")
@@ -38,13 +41,18 @@ func usage(o io.Writer) {
 	fmt.Fprintln(o, "  advised to use -- if the argument is unknown, e.g. jsonnice -- \"$FILENAME\".")
 }
 
+type loggingConfig struct {
+	logLevel        slog.Level
+	timestampFormat string
+}
+
 type config struct {
 	inputFile      string
 	filenameIsCode bool
 	dap            bool
 	port           string
 	jpath          []string
-	logLevel       slog.Level
+	log            loggingConfig
 	stdin          bool
 }
 
@@ -146,7 +154,9 @@ func processArgs(givenArgs []string, config *config) (processArgsStatus, error) 
 				return processArgsStatusFailure, fmt.Errorf(
 					"invalid log level %s. Allowed: debug,info,warn,error", level)
 			}
-			config.logLevel = slvl
+			config.log.logLevel = slvl
+		} else if arg == "--no-timestamp" {
+			config.log.timestampFormat = " "
 		} else if len(arg) > 1 && arg[0] == '-' {
 			return processArgsStatusFailure, fmt.Errorf("unrecognized argument: %s", arg)
 		} else {
@@ -218,8 +228,11 @@ func safeReadInput(filenameIsCode bool, filename *string) string {
 
 func main() {
 	config := config{
-		jpath:    []string{},
-		logLevel: slog.LevelError,
+		jpath: []string{},
+		log: loggingConfig{
+			logLevel:        slog.LevelError,
+			timestampFormat: time.StampMilli,
+		},
 	}
 	status, err := processArgs(os.Args[1:], &config)
 	if err != nil {
@@ -244,7 +257,8 @@ func main() {
 	}
 
 	slog.SetDefault(slog.New(tint.NewHandler(os.Stderr, &tint.Options{
-		Level: config.logLevel,
+		Level:      config.log.logLevel,
+		TimeFormat: config.log.timestampFormat,
 	})))
 
 	if config.dap {
