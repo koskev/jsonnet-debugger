@@ -31,6 +31,7 @@ func usage(o io.Writer) {
 	fmt.Fprintln(o, "  -s / --stdin               Start a debug-adapter-protocol session using stdion/stdout for communication")
 	fmt.Fprintln(o, "  -l / --log-level           Set the log level. Allowed values: debug,info,warn,error")
 	fmt.Fprintln(o, "  --no-timestamp             Replaces the timestamp in logs with a space (required for intellij)")
+	fmt.Fprintln(o, "  --no-color                 Disables color output (required for intellij)")
 	fmt.Fprintln(o, "  -p / --port                Sets the port to listen to in dap mode")
 	fmt.Fprintln(o, "  --version                  Print version")
 	fmt.Fprintln(o)
@@ -44,6 +45,7 @@ func usage(o io.Writer) {
 type loggingConfig struct {
 	logLevel        slog.Level
 	timestampFormat string
+	noColor         bool
 }
 
 type config struct {
@@ -157,6 +159,8 @@ func processArgs(givenArgs []string, config *config) (processArgsStatus, error) 
 			config.log.logLevel = slvl
 		} else if arg == "--no-timestamp" {
 			config.log.timestampFormat = " "
+		} else if arg == "--no-color" {
+			config.log.noColor = true
 		} else if len(arg) > 1 && arg[0] == '-' {
 			return processArgsStatusFailure, fmt.Errorf("unrecognized argument: %s", arg)
 		} else {
@@ -259,6 +263,7 @@ func main() {
 	slog.SetDefault(slog.New(tint.NewHandler(os.Stderr, &tint.Options{
 		Level:      config.log.logLevel,
 		TimeFormat: config.log.timestampFormat,
+		NoColor:    config.log.noColor,
 	})))
 
 	if config.dap {
