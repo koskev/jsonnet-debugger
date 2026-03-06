@@ -1,3 +1,7 @@
+# Deprecated fork
+
+This fork is deprecated. For a DAP compatible debugger use my [grustonnet-debugger](https://github.com/koskev/grustonnet-ls) instead
+
 # jsonnet-debugger
 
 A debugging tool for the [Jsonnet](https://jsonnet.org).
